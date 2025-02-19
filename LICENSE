@@ -1,0 +1,79 @@
+UCA - Wrapper for Django DRF License Agreement
+Version 1.0 – 19th February 2025
+
+Copyright (c) 2025 AiCentive GmbH. All rights reserved.
+
+This License Agreement ("Agreement") is a legal agreement between you ("Licensee" or "Customer") and AiCentive GmbH ("Licensor" or "Creator") for the use of the Unchained API (UCA) Wrapper for Django DRF ("Software").
+
+1. Grant of License
+-------------------
+1.1 License Grant.
+Subject to the terms and conditions of this Agreement, the Licensor hereby grants to the Licensee a non-exclusive, non-transferable, and revocable license to use the Software solely for the Licensee’s internal business purposes.
+
+1.2 Authorized Use.
+This license is granted only to customers who have obtained the Software directly from the Licensor or an authorized representative. Use of the Software is limited to such Licensees and may not be extended, sublicensed, or otherwise transferred to any third party.
+
+2. Distribution Restrictions
+----------------------------
+2.1 Distribution Rights.
+The Licensor reserves the exclusive right to distribute, sell, or otherwise disseminate the Software. Under no circumstances shall the Licensee or any third party distribute, sell, lease, sublicense, or otherwise transfer the Software or any portion thereof without the express written consent of the Licensor.
+
+2.2 No Redistribution.
+The Licensee agrees that the Software is provided only for use by customers of the Licensor and shall not be redistributed in any form, including but not limited to electronic, source code, or binary formats, unless explicitly permitted in writing by the Licensor.
+
+3. Restrictions on Use
+-----------------------
+3.1 No Modification.
+The Licensee shall not modify, decompile, reverse engineer, disassemble, or create derivative works of the Software, except as expressly permitted by applicable law or with the prior written consent of the Licensor.
+
+3.2 Compliance with Laws.
+The Licensee agrees to use the Software only in compliance with all applicable laws and regulations.
+
+4. Ownership and Intellectual Property
+----------------------------------------
+4.1 Intellectual Property Rights.
+The Software is licensed, not sold. All rights, title, and interest in and to the Software (including all copyrights,
+patents, trade secrets, trademarks, and other intellectual property rights) remain with the Licensor.
+
+4.2 No Implied Rights.
+No rights or licenses, either express or implied, are granted to the Licensee other than as expressly set forth in this Agreement.
+
+5. Term and Termination
+-----------------------
+5.1 Term.
+This Agreement shall commence on the date the Software is received by the Licensee and shall continue until terminated.
+
+5.2 Termination.
+The Licensor reserves the right to terminate this Agreement immediately upon any breach by the Licensee. Upon termination,
+the Licensee shall immediately cease all use of the Software and destroy all copies in its possession or control.
+
+5.3 Effect of Termination.
+Termination of this Agreement shall not limit the Licensor’s rights or remedies at law or in equity.
+
+6. Disclaimer of Warranty and Limitation of Liability
+-------------------------------------------------------
+6.1 Disclaimer of Warranty.
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NONINFRINGEMENT.
+
+6.2 Limitation of Liability.
+IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE SOFTWARE.
+
+7. General Provisions
+---------------------
+7.1 Governing Law.
+This Agreement shall be governed by and construed in accordance with the laws of Germany, without regard to its conflict of law principles.
+
+7.2 Entire Agreement.
+This Agreement constitutes the entire agreement between the parties with respect to the subject matter hereof and supersedes all
+prior or contemporaneous understandings or agreements.
+
+7.3 Severability.
+If any provision of this Agreement is held to be unenforceable, such provision shall be reformed only to the extent necessary to
+make it enforceable, and the remaining provisions shall remain in full force and effect.
+
+7.4 Amendment.
+Any modification or amendment of this Agreement must be in writing and signed by the Licensor.
+
+By using the Software, the Licensee acknowledges that they have read, understood, and agree to be bound by the terms and conditions of this Agreement.
