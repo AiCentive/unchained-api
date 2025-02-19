@@ -172,7 +172,7 @@ class UCAView(APIView):
         return Response(response_data, status=http_code)
 
 
-class CustomV2TokenObtain(UCAView):
+class UCATokenObtain(UCAView):
     """
     Handles obtaining access and refresh tokens for a user.
     """
@@ -287,7 +287,7 @@ class CustomV2TokenObtain(UCAView):
         return self.process()
 
 
-class CustomV2TokenRefresh(UCAView):
+class UCATokenRefresh(UCAView):
     """
     Handles refreshing an access token using a valid refresh token.
     """
