@@ -97,7 +97,7 @@ class UCAView(APIView):
         if should_raise and exc:
             raise exc
 
-        return exc is None
+        return exc is not None
 
     def get_request_data(self, key, exception=None, eval_expr=False):
         """
