@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from rest_framework import status
@@ -173,9 +174,21 @@ class CustomV2TokenObtain(UCAView):
     """
 
     context = UCAContext.list()
-    access_token_expiry = 5  # in minutes
-    refresh_token_expiry = 60 * 24  # in minutes
-    refresh_token_expiry_remembered = 60 * 24 * 7  # in minutes
+    access_token_expiry = (
+        settings.UCA_JWT_ACCESS_TOKEN_EXPIRY
+        if hasattr(settings, "UCA_JWT_ACCESS_TOKEN_EXPIRY")
+        else 5
+    )  # in minutes
+    refresh_token_expiry = (
+        settings.UCA_JWT_REFRESH_TOKEN_EXPIRY
+        if hasattr(settings, "UCA_JWT_REFRESH_TOKEN_EXPIRY")
+        else 60 * 24 * 7
+    )  # in minutes
+    refresh_token_expiry_remembered = (
+        settings.UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY
+        if hasattr(settings, "UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY")
+        else 60 * 24 * 7 * 30
+    )  # in minutes
 
     def generate_token_payloads(self, user, remember=False):
         """
@@ -276,9 +289,21 @@ class CustomV2TokenRefresh(UCAView):
     """
 
     context = UCAContext.list()
-    access_token_expiry = 5  # in minutes
-    refresh_token_expiry = 60 * 24  # in minutes
-    refresh_token_expiry_remembered = 60 * 24 * 7  # in minutes
+    access_token_expiry = (
+        settings.UCA_JWT_ACCESS_TOKEN_EXPIRY
+        if hasattr(settings, "UCA_JWT_ACCESS_TOKEN_EXPIRY")
+        else 5
+    )  # in minutes
+    refresh_token_expiry = (
+        settings.UCA_JWT_REFRESH_TOKEN_EXPIRY
+        if hasattr(settings, "UCA_JWT_REFRESH_TOKEN_EXPIRY")
+        else 60 * 24 * 7
+    )  # in minutes
+    refresh_token_expiry_remembered = (
+        settings.UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY
+        if hasattr(settings, "UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY")
+        else 60 * 24 * 7 * 30
+    )  # in minutes
 
     def generate_token_payloads(self, user, refresh_token_data):
         """
