@@ -78,6 +78,12 @@ class UCAObjectPermissionCheckError(APIException):
     default_code = "permission_check_error"
 
 
+class UCAPermissionError(APIException):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = "Permission error."
+    default_code = "permission_error"
+
+
 class UCASerializerInvalid(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Serializer is invalid."

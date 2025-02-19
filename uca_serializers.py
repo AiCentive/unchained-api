@@ -1,9 +1,8 @@
 from rest_framework import serializers
 
-from api.exceptions import ApiPermissionError
+from api.uca_exceptions import UCAPermissionError
 from api.uca_helpers import UACHelpers
 from api.uca_models import UCAModel
-from api.settings import ApiSettings
 from django.db import models
 from django.apps import apps
 
@@ -30,14 +29,10 @@ class UCAModelSerializer(serializers.ModelSerializer):
             return res
 
         if not request:
-            if ApiSettings.DEBUG:
-                print("UCAModelSerializer: No request provided.")
             return res
 
         current_user = request.user
         if not current_user:
-            if ApiSettings.DEBUG:
-                print("UCAModelSerializer: No user found in request")
             return res
 
         accessible_fields = []
@@ -93,7 +88,7 @@ class UCAModelSerializer(serializers.ModelSerializer):
                 if self.context.get(
                     "check_field_permission", False
                 ) and not field_value.check_view_perm(self.context.get("request")):
-                    raise ApiPermissionError()
+                    raise UCAPermissionError()
 
         super().run_validators(value)
 
