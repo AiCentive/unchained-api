@@ -68,7 +68,7 @@ def eval_(node):
         raise UCAValueError("eval_ does not support this node. Hi exploiter :)")
 
 
-class UACHelpers:
+class UCAHelpers:
     class AllowMissingDict(dict):
         def __missing__(self, key):
             return "{" + key + "}"

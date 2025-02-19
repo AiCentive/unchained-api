@@ -19,7 +19,7 @@ from .uca_exceptions import (
     UCARequestMethodNotAllowed,
     UCAEmptyRequestError,
 )
-from .uca_helpers import UACHelpers
+from .uca_helpers import UCAHelpers
 from .uca_jwt import decode_jwt, create_jwt
 from .uca_paginator import UCAPaginator
 
@@ -48,8 +48,8 @@ class UCAView(APIView):
     user_serializer = None
     return_serializer_class = None
 
-    check_object_permissions = True
-    check_serializer_field_permission = True
+    should_check_obj_permission = True
+    should_check_serializer_obj_permission = True
 
     def add_user_to_context(self):
         """
@@ -67,22 +67,26 @@ class UCAView(APIView):
     def check_object_permission(self, obj, action, should_raise=True):
         exc = None
 
-        if not self.check_object_permissions:
+        if not self.should_check_obj_permission:
             return True
 
         if action == "view":
-            if self.check_object_permissions and not obj.check_view_perm(self.request):
+            if self.should_check_obj_permission and not obj.check_view_perm(
+                self.request
+            ):
                 exc = UCAObjectPermissionDenied()
         elif action == "add":
-            if self.check_object_permissions and not obj.check_add_perm(self.request):
+            if self.should_check_obj_permission and not obj.check_add_perm(
+                self.request
+            ):
                 exc = UCAObjectPermissionDenied()
         elif action == "change":
-            if self.check_object_permissions and not obj.check_change_perm(
+            if self.should_check_obj_permission and not obj.check_change_perm(
                 self.request
             ):
                 exc = UCAObjectPermissionDenied()
         elif action == "delete":
-            if self.check_object_permissions and not obj.check_delete_perm(
+            if self.should_check_obj_permission and not obj.check_delete_perm(
                 self.request
             ):
                 exc = UCAObjectPermissionDenied()
@@ -103,7 +107,7 @@ class UCAView(APIView):
         value = self.request_content.get(key, None)
         if value is None and exception:
             raise exception
-        return UACHelpers.eval_expr(value) if eval_expr and value else value
+        return UCAHelpers.eval_expr(value) if eval_expr and value else value
 
     def get_request_content(self):
         """
@@ -161,7 +165,7 @@ class UCAView(APIView):
         Formats and returns the API response with optional encryption.
         """
         response_data = (
-            UACHelpers.encrypt_context(self.context)
+            UCAHelpers.encrypt_context(self.context)
             if self.encryption
             else self.context
         )
@@ -196,8 +200,8 @@ class CustomV2TokenObtain(UCAView):
         """
         shared_payload = {
             "user_id": str(user.id),
-            "user_agent": UACHelpers.get_client_user_agent(self.request),
-            "user_ip": UACHelpers.get_client_ip(self.request),
+            "user_agent": UCAHelpers.get_client_user_agent(self.request),
+            "user_ip": UCAHelpers.get_client_ip(self.request),
         }
 
         access_token_payload = shared_payload
@@ -311,8 +315,8 @@ class CustomV2TokenRefresh(UCAView):
         """
         shared_payload = {
             "user_id": str(user.id),
-            "user_agent": UACHelpers.get_client_user_agent(self.request),
-            "user_ip": UACHelpers.get_client_ip(self.request),
+            "user_agent": UCAHelpers.get_client_user_agent(self.request),
+            "user_ip": UCAHelpers.get_client_ip(self.request),
         }
 
         access_token_payload = shared_payload
@@ -465,7 +469,7 @@ class UCAListView(UCAView):
         result_set = paginator.paginate(
             objects=queryset,
             request=self.request,
-            check_object_permission=self.check_object_permission,
+            check_object_permission=self.should_check_obj_permission,
         )
 
         paginator.update_context(self.context)
@@ -477,7 +481,7 @@ class UCAListView(UCAView):
                 context={
                     "request": self.request,
                     "view": self,
-                    "check_field_permission": self.check_serializer_field_permission,
+                    "check_field_permission": self.should_check_serializer_obj_permission,
                     "action": "view",
                 },
             ).data
@@ -549,7 +553,7 @@ class UCAGetView(UCAView):
             context={
                 "request": self.request,
                 "view": self,
-                "check_field_permission": self.check_serializer_field_permission,
+                "check_field_permission": self.should_check_serializer_obj_permission,
                 "action": self.action_name,
             },
         ).data
@@ -607,7 +611,7 @@ class UCAAddView(UCAView):
             context={
                 "request": self.request,
                 "view": self,
-                "check_field_permission": self.check_serializer_field_permission,
+                "check_field_permission": self.should_check_serializer_obj_permission,
                 "action": self.action_name,
             },
         )
@@ -633,7 +637,7 @@ class UCAAddView(UCAView):
                     context={
                         "request": self.request,
                         "view": self,
-                        "check_field_permission": self.check_serializer_field_permission,
+                        "check_field_permission": self.should_check_serializer_obj_permission,
                         "action": self.action_name,
                     },
                 ).data
@@ -708,7 +712,7 @@ class UCAChangeView(UCAView):
             context={
                 "request": self.request,
                 "view": self,
-                "check_field_permission": self.check_serializer_field_permission,
+                "check_field_permission": self.should_check_serializer_obj_permission,
                 "action": self.action_name,
             },
         )
@@ -729,7 +733,7 @@ class UCAChangeView(UCAView):
                     context={
                         "request": self.request,
                         "view": self,
-                        "check_field_permission": self.check_serializer_field_permission,
+                        "check_field_permission": self.should_check_serializer_obj_permission,
                         "action": self.action_name,
                     },
                 ).data

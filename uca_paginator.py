@@ -1,7 +1,7 @@
 from django.db.models import QuerySet
 
 from api.uca_exceptions import UCAValueError
-from api.uca_helpers import UACHelpers
+from api.uca_helpers import UCAHelpers
 
 
 class UCAPaginator:
@@ -76,7 +76,7 @@ class UCAPaginator:
                     if isinstance(result_set, list):
                         result_set.append(obj)
                     elif isinstance(result_set, set):
-                        added = UACHelpers.add_set(result_set, obj)
+                        added = UCAHelpers.add_set(result_set, obj)
                         if not added:
                             self.limit += 1
                             self.total -= 1
@@ -85,7 +85,7 @@ class UCAPaginator:
                 if isinstance(result_set, list):
                     result_set.append(obj)
                 elif isinstance(result_set, set):
-                    added = UACHelpers.add_set(result_set, obj)
+                    added = UCAHelpers.add_set(result_set, obj)
                     if not added:
                         self.limit += 1
                         self.total -= 1

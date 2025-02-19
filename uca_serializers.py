@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from api.uca_exceptions import UCAPermissionError
-from api.uca_helpers import UACHelpers
+from api.uca_helpers import UCAHelpers
 from api.uca_models import UCAModel
 from django.db import models
 from django.apps import apps
@@ -46,7 +46,7 @@ class UCAModelSerializer(serializers.ModelSerializer):
                 continue
 
             if "__" in field_name:
-                real_field_name = UACHelpers.list_get(field_name.split("__"), 0, None)
+                real_field_name = UCAHelpers.list_get(field_name.split("__"), 0, None)
 
             if not real_field_name:
                 continue
