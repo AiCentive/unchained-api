@@ -772,14 +772,15 @@ class UCADeleteView(UCAView):
         """
         Constructs and returns the queryset with optional filtering, annotation, and ordering.
         """
-        id = self.request_data.get("id")
+        queryset = self.model_class.objects
+        if not isinstance(self.request_filter, Q):
+            raise UCAFilterWrongFormat()
 
-        if not id:
-            raise UCADataIdNotProvided()
+        queryset = self.annotate_queryset(queryset).filter(self.request_filter)
 
-        return self.model_class.objects.get(id=id)
+        return queryset
 
-    def hook_before_deletion(self, obj):
+    def hook_before_deletion(self, queryset):
         """
         Placeholder for subclasses to implement pre-deletion logic.
         """
@@ -792,12 +793,21 @@ class UCADeleteView(UCAView):
         pass
 
     def handler(self):
-        obj = self.get_queryset()
-        self.check_object_permission(obj, self.action_name)
+        queryset = self.get_queryset()
 
-        self.hook_before_deletion(obj)
+        excludes = set()
+        for obj in queryset:
+            has_perm = self.check_object_permission(
+                obj, self.action_name, should_raise=queryset.count() == 1
+            )
+            if not has_perm:
+                excludes.add(obj)
 
-        obj.delete()
+        queryset = queryset.exclude(id__in=[obj.id for obj in excludes])
+
+        self.hook_before_deletion(queryset)
+
+        queryset.delete()
 
         self.hook_after_deletion()
 
