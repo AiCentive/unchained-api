@@ -10,8 +10,6 @@ from .uca_exceptions import (
     UCAAuthInvalid,
     UCAAuthRefreshTokenInvalid,
     UCAFilterWrongFormat,
-    UCAPaginationNotProvided,
-    UCAOrderNotProvided,
     UCAObjectPermissionDenied,
     UCAObjectPermissionCheckError,
     UCASerializerInvalid,
@@ -22,6 +20,22 @@ from .uca_exceptions import (
 from .uca_helpers import UCAHelpers
 from .uca_jwt import decode_jwt, create_jwt
 from .uca_paginator import UCAPaginator
+from .uca_serializers import (
+    UCAListViewRequestSerializer,
+    UCAListViewResponseSerializer,
+    UCAAddViewRequestSerializer,
+    UCAAddViewResponseSerializer,
+    UCAGetViewRequestSerializer,
+    UCAGetViewResponseSerializer,
+    UCAChangeViewRequestSerializer,
+    UCAChangeViewResponseSerializer,
+    UCADeleteViewRequestSerializer,
+    UCADeleteViewResponseSerializer,
+    UCAObtainTokenRequestSerializer,
+    UCATokenObtainResponseSerializer,
+    UCATokenRefreshRequestSerializer,
+    UCATokenRefreshResponseSerializer,
+)
 
 
 class UCAView(APIView):
@@ -44,8 +58,10 @@ class UCAView(APIView):
     request_pagination_required = False
 
     model_class = None
+    request_serializer_class = None
+    base_response_serializer_class = None
     user_serializer = None
-    return_serializer_class = None
+    model_return_serializer_class = None
 
     should_check_obj_permission = True
     should_check_serializer_obj_permission = True
@@ -60,8 +76,13 @@ class UCAView(APIView):
         if user and user.is_authenticated and self.user_serializer:
             self.context["user"] = self.user_serializer(instance=user).data
 
-    def get_return_serializer_class(self):
-        return self.return_serializer_class
+    @classmethod
+    def get_response_serializer_class(cls, view=None):
+        return cls.base_response_serializer_class
+
+    @classmethod
+    def get_model_return_serializer_class(cls, view=None):
+        return cls.model_return_serializer_class
 
     def check_object_permission(self, obj, action, should_raise=True):
         exc = None
@@ -129,17 +150,15 @@ class UCAView(APIView):
 
         self.request_content = method_handlers[self.request.method]
 
-        self.request_data = self.get_request_data("data")
-        self.request_flags = self.get_request_data("flags")
-        self.request_filter = self.get_request_data("filter", eval_expr=True)
-        self.request_order = self.get_request_data(
-            "order",
-            UCAOrderNotProvided() if self.request_order_required else None,
-        )
-        self.request_pagination = self.get_request_data(
-            "pagination",
-            UCAPaginationNotProvided() if self.request_pagination_required else None,
-        )
+        serializer = self.request_serializer_class(data=self.request_content)
+        if not serializer.is_valid():
+            raise UCASerializerInvalid(serializer.errors)
+
+        self.request_filter = serializer.validated_data.get("filter")
+        self.request_order = serializer.validated_data.get("order")
+        self.request_pagination = serializer.validated_data.get("pagination")
+        self.request_flags = serializer.validated_data.get("flags")
+        self.request_data = serializer.validated_data.get("data")
 
     def get_queryset(self):
         """
@@ -163,7 +182,13 @@ class UCAView(APIView):
         """
         Prepares and returns a response with the context and HTTP status code.
         """
-        return Response(self.context, status=http_code)
+        serializer = self.__class__.get_response_serializer_class()(
+            data=self.context,
+        )
+        if not serializer.is_valid():
+            raise UCASerializerInvalid(serializer.errors)
+
+        return Response(serializer.validated_data, status=http_code)
 
 
 class UCATokenObtain(UCAView):
@@ -171,7 +196,10 @@ class UCATokenObtain(UCAView):
     Handles obtaining access and refresh tokens for a user.
     """
 
-    context = UCAContext.list()
+    context = UCAContext.get()
+    request_serializer_class = UCAObtainTokenRequestSerializer
+    base_response_serializer_class = UCATokenObtainResponseSerializer
+
     access_token_expiry = (
         settings.UCA_JWT_ACCESS_TOKEN_EXPIRY
         if hasattr(settings, "UCA_JWT_ACCESS_TOKEN_EXPIRY")
@@ -251,15 +279,15 @@ class UCATokenObtain(UCAView):
             ),
         )
 
-        results = {
+        result = {
             "access_token": access_token,
             "refresh_token": refresh_token,
         }
 
         if self.user_serializer:
-            results["user"] = self.user_serializer(instance=user).data
+            result["user"] = self.user_serializer(instance=user).data
 
-        self.context["results"] = results
+        self.context["result"] = result
 
     def process(self):
         """
@@ -287,6 +315,9 @@ class UCATokenRefresh(UCAView):
     """
 
     context = UCAContext.list()
+    request_serializer_class = UCATokenRefreshRequestSerializer
+    base_response_serializer_class = UCATokenRefreshResponseSerializer
+
     access_token_expiry = (
         settings.UCA_JWT_ACCESS_TOKEN_EXPIRY
         if hasattr(settings, "UCA_JWT_ACCESS_TOKEN_EXPIRY")
@@ -385,15 +416,15 @@ class UCATokenRefresh(UCAView):
             ),
         )
 
-        results = {
+        result = {
             "access_token": access_token,
             "refresh_token": refresh_token,
         }
 
         if self.user_serializer:
-            results["user"] = self.user_serializer(instance=user).data
+            result["user"] = self.user_serializer(instance=user).data
 
-        self.context["results"] = results
+        self.context["result"] = result
 
     def process(self):
         """
@@ -417,11 +448,23 @@ class UCATokenRefresh(UCAView):
 
 class UCAListView(UCAView):
     context = UCAContext.list()
+    request_serializer_class = UCAListViewRequestSerializer
+    base_response_serializer_class = UCAListViewResponseSerializer
     action_name = "view"
 
     distinct_objects = False
     request_order_required = True
     request_pagination_required = True
+
+    @classmethod
+    def get_response_serializer_class(cls, view=None):
+        combined_serializer = type(
+            f"{cls.__name__}ResponseSerializer",
+            (cls.base_response_serializer_class,),
+            {},
+        )
+
+        return combined_serializer
 
     def get_queryset(self):
         """
@@ -470,7 +513,7 @@ class UCAListView(UCAView):
         self.hook_before_serializer(result_set)
 
         result_set = [
-            self.get_return_serializer_class()(
+            self.__class__.get_model_return_serializer_class(self)(
                 instance=result,
                 context={
                     "request": self.request,
@@ -509,9 +552,21 @@ class UCAListView(UCAView):
 
 class UCAGetView(UCAView):
     context = UCAContext.get()
+    request_serializer_class = UCAGetViewRequestSerializer
+    base_response_serializer_class = UCAGetViewResponseSerializer
     action_name = "view"
 
     model_class = None
+
+    @classmethod
+    def get_response_serializer_class(cls, view=None):
+        combined_serializer = type(
+            f"{cls.__name__}ResponseSerializer",
+            (cls.base_response_serializer_class,),
+            {"result": cls.get_model_return_serializer_class()()},
+        )
+
+        return combined_serializer
 
     def get_queryset(self):
         """
@@ -542,7 +597,7 @@ class UCAGetView(UCAView):
         self.check_object_permission(obj, self.action_name)
 
         self.hook_before_serializer(obj)
-        serialized_obj = self.get_return_serializer_class()(
+        serialized_obj = self.__class__.get_model_return_serializer_class(self)(
             obj,
             context={
                 "request": self.request,
@@ -579,13 +634,26 @@ class UCAGetView(UCAView):
 
 class UCAAddView(UCAView):
     context = UCAContext.create()
+    request_serializer_class = UCAAddViewRequestSerializer
+    base_response_serializer_class = UCAAddViewResponseSerializer
     action_name = "add"
 
     model_class = None
-    serializer_class = None
+    model_serializer_class = None
 
-    def get_serializer_class(self):
-        return self.serializer_class
+    @classmethod
+    def get_response_serializer_class(cls, view=None):
+        combined_serializer = type(
+            f"{cls.__name__}ResponseSerializer",
+            (cls.base_response_serializer_class,),
+            {"result": cls.get_model_return_serializer_class()()},
+        )
+
+        return combined_serializer
+
+    @classmethod
+    def get_model_serializer_class(cls, view=None):
+        return cls.model_serializer_class
 
     def hook_before_creation(self, tmp_obj):
         """
@@ -600,7 +668,7 @@ class UCAAddView(UCAView):
         pass
 
     def handler(self):
-        serializer = self.get_serializer_class()(
+        serializer = self.__class__.get_model_serializer_class(self)(
             data=self.request_data,
             context={
                 "request": self.request,
@@ -626,7 +694,7 @@ class UCAAddView(UCAView):
 
         self.context.update(
             {
-                "result": self.get_return_serializer_class()(
+                "result": self.__class__.get_model_return_serializer_class()(
                     instance=tmp_object,
                     context={
                         "request": self.request,
@@ -662,13 +730,26 @@ class UCAAddView(UCAView):
 
 class UCAChangeView(UCAView):
     context = UCAContext.update()
+    request_serializer_class = UCAChangeViewRequestSerializer
+    base_response_serializer_class = UCAChangeViewResponseSerializer
     action_name = "change"
 
     model_class = None
-    serializer_class = None
+    model_serializer_class = None
 
-    def get_serializer_class(self):
-        return self.serializer_class
+    @classmethod
+    def get_model_serializer_class(cls, view=None):
+        return cls.model_serializer_class
+
+    @classmethod
+    def get_response_serializer_class(cls, view=None):
+        combined_serializer = type(
+            f"{cls.__name__}ResponseSerializer",
+            (cls.base_response_serializer_class,),
+            {"result": cls.get_model_return_serializer_class()()},
+        )
+
+        return combined_serializer
 
     def get_queryset(self):
         """
@@ -699,7 +780,7 @@ class UCAChangeView(UCAView):
 
         self.hook_before_update(obj)
 
-        serializer = self.get_serializer_class()(
+        serializer = self.__class__.get_model_serializer_class(self)(
             instance=obj,
             data=self.request_data,
             partial=True,
@@ -722,7 +803,7 @@ class UCAChangeView(UCAView):
 
         self.context.update(
             {
-                "result": self.get_return_serializer_class()(
+                "result": self.__class__.get_model_return_serializer_class()(
                     instance=updated_object,
                     context={
                         "request": self.request,
@@ -758,6 +839,8 @@ class UCAChangeView(UCAView):
 
 class UCADeleteView(UCAView):
     context = UCAContext.remove()
+    request_serializer_class = UCADeleteViewRequestSerializer
+    base_response_serializer_class = UCADeleteViewResponseSerializer
     action_name = "delete"
 
     model_class = None

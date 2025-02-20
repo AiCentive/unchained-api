@@ -7,6 +7,100 @@ from django.db import models
 from django.apps import apps
 
 
+class UCAObtainTokenRequestSerializer(serializers.Serializer):
+    data = serializers.DictField(required=True)
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCATokenObtainResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+    result = serializers.DictField(default={})
+
+
+class UCATokenRefreshRequestSerializer(serializers.Serializer):
+    data = serializers.DictField(required=True)
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCATokenRefreshResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+    result = serializers.DictField(default={})
+
+
+class UCAListViewRequestSerializer(serializers.Serializer):
+    filter = serializers.CharField(allow_blank=True, default="", required=False)
+    order = serializers.ListField(
+        child=serializers.CharField(), required=False, default=[]
+    )
+    flags = serializers.DictField(required=False, default={})
+
+    class RequestPaginationSerializer(serializers.Serializer):
+        limit = serializers.IntegerField(default=10)
+        offset = serializers.IntegerField(default=0)
+
+    pagination = RequestPaginationSerializer()
+
+
+class UCAListViewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+    results = serializers.ListField(default=[], allow_empty=True)
+
+    class ResponsePaginationSerializer(serializers.Serializer):
+        limit = serializers.IntegerField()
+        offset = serializers.IntegerField()
+        page = serializers.IntegerField()
+        pages = serializers.IntegerField()
+        total = serializers.IntegerField()
+
+    pagination = ResponsePaginationSerializer()
+
+
+class UCAAddViewRequestSerializer(serializers.Serializer):
+    data = serializers.DictField(required=True)
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCAAddViewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+    result = serializers.DictField(default={})
+
+
+class UCAGetViewRequestSerializer(serializers.Serializer):
+    filter = serializers.CharField(allow_blank=True, default="", required=False)
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCAGetViewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+    result = serializers.DictField(default={})
+
+
+class UCAChangeViewRequestSerializer(serializers.Serializer):
+    data = serializers.DictField(required=True)
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCAChangeViewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+    result = serializers.DictField(default={})
+
+
+class UCADeleteViewRequestSerializer(serializers.Serializer):
+    filter = serializers.CharField(allow_blank=True, default="", required=False)
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCADeleteViewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    messages = serializers.ListField(child=serializers.CharField(), default=[])
+
+
 class UCAModelSerializer(serializers.ModelSerializer):
     __model__ = serializers.SerializerMethodField("get__model__")
 
