@@ -32,7 +32,6 @@ class UCAView(APIView):
     action_name = None
 
     transactional = True
-    encryption = False
 
     context = {}
     request_content = {}
@@ -162,14 +161,9 @@ class UCAView(APIView):
 
     def respond(self, http_code=status.HTTP_200_OK):
         """
-        Formats and returns the API response with optional encryption.
+        Prepares and returns a response with the context and HTTP status code.
         """
-        response_data = (
-            UCAHelpers.encrypt_context(self.context)
-            if self.encryption
-            else self.context
-        )
-        return Response(response_data, status=http_code)
+        return Response(self.context, status=http_code)
 
 
 class UCATokenObtain(UCAView):
