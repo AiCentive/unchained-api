@@ -191,7 +191,7 @@ class UCATokenObtain(UCAView):
     refresh_token_expiry_remembered = (
         settings.UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY
         if hasattr(settings, "UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY")
-        else 60 * 24 * 7 * 30
+        else 60 * 24 * 30
     )  # in minutes
 
     def generate_token_payloads(self, user, remember=False):
@@ -306,7 +306,7 @@ class UCATokenRefresh(UCAView):
     refresh_token_expiry_remembered = (
         settings.UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY
         if hasattr(settings, "UCA_JWT_REFRESH_TOKEN_REMEMBERED_EXPIRY")
-        else 60 * 24 * 7 * 30
+        else 60 * 24 * 30
     )  # in minutes
 
     def generate_token_payloads(self, user, refresh_token_data):
