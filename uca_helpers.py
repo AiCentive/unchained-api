@@ -1,6 +1,4 @@
-import binascii
 import functools
-import os
 import re
 from datetime import timedelta
 
@@ -148,17 +146,6 @@ class UCAHelpers:
                 return True
 
         return PermissionRequired
-
-    @staticmethod
-    def encrypt_context(context):
-        context.update(
-            {
-                str(
-                    binascii.hexlify(os.urandom(150)).decode()[0:150]
-                ): binascii.hexlify(os.urandom(150)).decode()[0:150]
-            }
-        )
-        return {"data": ApiCrypto.encode(context)}
 
     @staticmethod
     def round_float(value, precision) -> str:
