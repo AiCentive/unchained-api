@@ -9,13 +9,13 @@ class CORSMiddleware(MiddlewareMixin):
 
     def process_response(self, request, response):
         allowed_origins = []
-        if hasattr(settings, "CORS_ALLOWED_ORIGINS"):
-            allowed_origins = settings.CORS_ALLOWED_ORIGINS
+        if hasattr(settings, "UCA_CORS_ALLOWED_ORIGINS"):
+            allowed_origins = settings.UCA_CORS_ALLOWED_ORIGINS
 
         # Allow any origin (not recommended for production)
         if (
-            hasattr(settings, "CORS_ALLOW_ANY_ORIGIN")
-            and settings.CORS_ALLOW_ANY_ORIGIN
+            hasattr(settings, "UCA_CORS_ALLOW_ANY_ORIGIN")
+            and settings.UCA_CORS_ALLOW_ANY_ORIGIN
         ):
             allowed_origins = ["*"]
 
