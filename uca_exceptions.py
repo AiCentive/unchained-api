@@ -108,6 +108,12 @@ class UCAValueError(APIException):
     default_code = "value_error"
 
 
+class UCAValueConflict(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "Value conflict."
+    default_code = "value_conflict"
+
+
 class UCARequestMethodNotAllowed(APIException):
     status_code = status.HTTP_405_METHOD_NOT_ALLOWED
     default_detail = "Method not allowed."
