@@ -184,6 +184,7 @@ class UCAView(APIView):
         """
         serializer = self.__class__.get_response_serializer_class()(
             data=self.context,
+            read_only=True,
         )
         if not serializer.is_valid():
             raise UCASerializerInvalid(serializer.errors)
