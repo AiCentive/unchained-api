@@ -63,3 +63,7 @@ class UCAAbstractUser(AbstractUser):
     def save(self, *args, **kwargs):
         self.full_name = f"{self.first_name} {self.last_name}"
         super().save(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        self.full_name = f"{self.first_name} {self.last_name}"
+        super().save(*args, **kwargs)
