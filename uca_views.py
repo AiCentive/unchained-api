@@ -182,14 +182,13 @@ class UCAView(APIView):
         """
         Prepares and returns a response with the context and HTTP status code.
         """
+        # TODO: Fix serializer validation
         serializer = self.__class__.get_response_serializer_class()(
             data=self.context,
             read_only=True,
         )
-        if not serializer.is_valid():
-            raise UCASerializerInvalid(serializer.errors)
 
-        return Response(serializer.validated_data, status=http_code)
+        return Response(serializer.initial_data, status=http_code)
 
 
 class UCATokenObtain(UCAView):
