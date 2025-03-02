@@ -50,7 +50,7 @@ class UCAAuthentication(BaseAuthentication):
         """
         auth_header = request.META.get(self.request_header, "")
         if not self._is_valid_auth_header(auth_header):
-            return None
+            return None, None
 
         token = auth_header.split(" ")[1]
 
@@ -60,7 +60,7 @@ class UCAAuthentication(BaseAuthentication):
             if not user:
                 raise UCAAuthInvalid("User not found")
 
-            return user, None
+            return user, token
 
         except jwt.ExpiredSignatureError:
             raise UCAAuthInvalid("Token has expired")
