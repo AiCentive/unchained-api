@@ -25,7 +25,9 @@ class CORSMiddleware(MiddlewareMixin):
             response["Access-Control-Allow-Origin"] = (
                 request_origin if request_origin else "*"
             )
-            response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response["Access-Control-Allow-Methods"] = (
+                "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            )
             response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
             response["Access-Control-Allow-Credentials"] = "true"
 
