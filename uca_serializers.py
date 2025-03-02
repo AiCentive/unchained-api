@@ -7,26 +7,47 @@ from django.db import models
 from django.apps import apps
 
 
-class UCAObtainTokenRequestSerializer(serializers.Serializer):
-    data = serializers.DictField(required=True)
+class UCATokenObtainSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+
+class UCATokenObtainRequestSerializer(serializers.Serializer):
+    data = UCATokenObtainSerializer()
     flags = serializers.DictField(required=False, default={})
+
+
+class UCATokenObtainResultSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
+    user = serializers.DictField()
 
 
 class UCATokenObtainResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField()
     messages = serializers.ListField(child=serializers.CharField(), default=[])
-    result = serializers.DictField(default={})
+    result = UCATokenObtainResultSerializer()
+
+
+class UCATokenRefreshSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
 
 
 class UCATokenRefreshRequestSerializer(serializers.Serializer):
-    data = serializers.DictField(required=True)
+    data = UCATokenRefreshSerializer()
     flags = serializers.DictField(required=False, default={})
+
+
+class UCATokenRefreshResultSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
+    user = serializers.DictField()
 
 
 class UCATokenRefreshResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField()
     messages = serializers.ListField(child=serializers.CharField(), default=[])
-    result = serializers.DictField(default={})
+    result = UCATokenRefreshResultSerializer()
 
 
 class UCAListViewRequestSerializer(serializers.Serializer):

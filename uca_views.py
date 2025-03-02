@@ -31,7 +31,7 @@ from .uca_serializers import (
     UCAChangeViewResponseSerializer,
     UCADeleteViewRequestSerializer,
     UCADeleteViewResponseSerializer,
-    UCAObtainTokenRequestSerializer,
+    UCATokenObtainRequestSerializer,
     UCATokenObtainResponseSerializer,
     UCATokenRefreshRequestSerializer,
     UCATokenRefreshResponseSerializer,
@@ -197,7 +197,7 @@ class UCATokenObtain(UCAView):
     """
 
     context = UCAContext.get()
-    request_serializer_class = UCAObtainTokenRequestSerializer
+    request_serializer_class = UCATokenObtainRequestSerializer
     base_response_serializer_class = UCATokenObtainResponseSerializer
 
     access_token_expiry = (
