@@ -1,5 +1,7 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
+from django.http import JsonResponse
+from rest_framework import status
 
 
 class CORSMiddleware(MiddlewareMixin):
@@ -7,16 +9,24 @@ class CORSMiddleware(MiddlewareMixin):
     Middleware to handle CORS (Cross-Origin Resource Sharing).
     """
 
-    def process_response(self, request, response):
-        allowed_origins = []
-        if hasattr(settings, "UCA_CORS_ALLOWED_ORIGINS"):
-            allowed_origins = settings.UCA_CORS_ALLOWED_ORIGINS
+    def process_request(self, request):
+        """Handle OPTIONS requests before authentication checks."""
+        if request.method == "OPTIONS":
+            response = JsonResponse(
+                {"message": "CORS Preflight OK"}, status=status.HTTP_200_OK
+            )
+            self.add_cors_headers(request, response)
+            return response  # Stop further processing for OPTIONS requests
 
-        # Allow any origin (not recommended for production)
-        if (
-            hasattr(settings, "UCA_CORS_ALLOW_ANY_ORIGIN")
-            and settings.UCA_CORS_ALLOW_ANY_ORIGIN
-        ):
+    def process_response(self, request, response):
+        """Attach CORS headers to the response."""
+        self.add_cors_headers(request, response)
+        return response
+
+    def add_cors_headers(self, request, response):
+        """Utility method to add CORS headers."""
+        allowed_origins = getattr(settings, "UCA_CORS_ALLOWED_ORIGINS", [])
+        if getattr(settings, "UCA_CORS_ALLOW_ANY_ORIGIN", False):
             allowed_origins = ["*"]
 
         request_origin = request.META.get("HTTP_ORIGIN")
@@ -30,9 +40,3 @@ class CORSMiddleware(MiddlewareMixin):
             )
             response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
             response["Access-Control-Allow-Credentials"] = "true"
-
-            # Handle preflight requests
-            if request.method == "OPTIONS":
-                response.status_code = 200
-
-        return response
