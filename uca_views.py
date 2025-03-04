@@ -154,7 +154,9 @@ class UCAView(APIView):
         if not serializer.is_valid():
             raise UCASerializerInvalid(serializer.errors)
 
-        self.request_filter = serializer.validated_data.get("filter")
+        self.request_filter = UCAHelpers.eval_expr(
+            serializer.validated_data.get("filter")
+        )
         self.request_order = serializer.validated_data.get("order")
         self.request_pagination = serializer.validated_data.get("pagination")
         self.request_flags = serializer.validated_data.get("flags")
