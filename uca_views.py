@@ -38,58 +38,103 @@ from .uca_serializers import (
 )
 
 
+# UCAView serves as a base API view that provides common functionality for processing
+# HTTP requests, managing request data, performing permission checks, and formatting responses.
+# It is designed to be subclassed with concrete implementations for specific resource handling.
 class UCAView(APIView):
     """
-    A base API view that handles context, request data processing, and response formatting.
+    A base API view that handles context initialization, request data processing, permission checks,
+    and response formatting. Subclasses should implement resource-specific logic by overriding
+    get_queryset(), annotate_queryset(), and handler() methods.
     """
 
+    # Action name can be used to define the current operation or behavior of the view.
     action_name = None
 
+    # Determines whether the request should be treated as transactional.
     transactional = True
 
-    context = {}
-    request_content = {}
-    request_data = {}
-    request_flags = {}
-    request_filter = None
-    request_order = None
-    request_order_required = False
-    request_pagination = None
-    request_pagination_required = False
+    # Containers for various data extracted from the request.
+    context = {}  # Response context to be passed to serializers.
+    request_content = {}  # Raw content extracted from the HTTP request.
+    request_data = {}  # Processed request data after validation.
+    request_flags = {}  # Additional flags provided in the request.
+    request_filter = None  # Filtering criteria extracted from the request.
+    request_order = None  # Ordering criteria extracted from the request.
+    request_order_required = False  # Flag to indicate if ordering is mandatory.
+    request_pagination = None  # Pagination parameters extracted from the request.
+    request_pagination_required = False  # Flag to indicate if pagination is mandatory.
 
+    # Model and serializer classes to be defined in subclasses.
     model_class = None
     request_serializer_class = None
     base_response_serializer_class = None
     user_serializer = None
     model_return_serializer_class = None
 
+    # Flags to control whether permission checks should be enforced on objects and serializer objects.
     should_check_obj_permission = True
     should_check_serializer_obj_permission = True
 
     def add_user_to_context(self):
         """
-        Adds the authenticated user's data to the context if available.
+        Adds the authenticated user's serialized data to the view context.
+
+        This method checks if the user exists and is authenticated. If a user_serializer
+        is defined, it serializes the user instance and adds it to the context dictionary.
         """
         user = self.request.user
 
-        # Only add the user to the context if authenticated and a serializer is provided
+        # Only add the user to the context if authenticated and a serializer is provided.
         if user and user.is_authenticated and self.user_serializer:
             self.context["user"] = self.user_serializer(instance=user).data
 
     @classmethod
     def get_response_serializer_class(cls, view=None):
+        """
+        Returns the serializer class used for formatting the response data.
+
+        This class method can be overridden to provide a different serializer for the response,
+        possibly based on the view instance or context.
+
+        :param view: (Optional) A view instance that may influence serializer selection.
+        :return: The serializer class for the response.
+        """
         return cls.base_response_serializer_class
 
     @classmethod
     def get_model_return_serializer_class(cls, view=None):
+        """
+        Returns the serializer class used for serializing the model data to be returned.
+
+        This class method can be overridden to change the serializer responsible for converting
+        model instances into a response-friendly format.
+
+        :param view: (Optional) A view instance that may influence serializer selection.
+        :return: The serializer class for model data serialization.
+        """
         return cls.model_return_serializer_class
 
     def check_object_permission(self, obj, action, should_raise=True):
+        """
+        Checks whether the current request has the necessary permissions to perform an action on an object.
+
+        The method inspects the 'action' parameter to determine which permission check to perform.
+        It then calls the corresponding method (e.g., check_view_perm, check_add_perm, etc.) on the object.
+        If the permission check fails and should_raise is True, the corresponding permission exception is raised.
+
+        :param obj: The model instance on which permission is being checked.
+        :param action: A string representing the action (e.g., "view", "add", "change", "delete").
+        :param should_raise: Boolean indicating whether to raise an exception on permission failure.
+        :return: True if permission is granted; otherwise, returns False or raises an exception.
+        """
         exc = None
 
+        # If permission checks are disabled, assume permission is granted.
         if not self.should_check_obj_permission:
             return True
 
+        # Perform the corresponding permission check based on the action.
         if action == "view":
             if self.should_check_obj_permission and not obj.check_view_perm(
                 self.request
@@ -111,9 +156,11 @@ class UCAView(APIView):
             ):
                 exc = UCAObjectPermissionDenied()
         else:
+            # Log or handle unknown actions appropriately.
             print(f"Unknown action: {action}")
             exc = UCAObjectPermissionCheckError()
 
+        # Raise an exception if the check fails and should_raise is True.
         if should_raise and exc:
             raise exc
 
@@ -121,8 +168,15 @@ class UCAView(APIView):
 
     def get_request_data(self, key, exception=None, eval_expr=False):
         """
-        Retrieves and optionally evaluates request content for the given key.
-        Raises an exception if the key is not found and an exception is provided.
+        Retrieves a value from the processed request content using the specified key.
+
+        If the key is missing and an exception is provided, it will raise that exception.
+        Optionally, the value can be evaluated as an expression if 'eval_expr' is True.
+
+        :param key: The key to retrieve from the request content.
+        :param exception: An optional exception to raise if the key is missing.
+        :param eval_expr: Boolean flag to indicate whether to evaluate the value as an expression.
+        :return: The retrieved value (possibly evaluated) or raises the provided exception.
         """
         value = self.request_content.get(key, None)
         if value is None and exception:
@@ -131,12 +185,21 @@ class UCAView(APIView):
 
     def get_request_content(self):
         """
-        Extracts the content, data, and flags from the request based on the HTTP method.
-        Raises an error if the request is empty or unsupported.
+        Extracts and validates the content of the request based on the HTTP method.
+
+        The method supports various HTTP methods (GET, POST, PUT, DELETE, PATCH) by mapping
+        them to the appropriate attribute of the request. After extraction, the content is
+        validated using the request serializer. On successful validation, the method extracts
+        and stores filtering, ordering, pagination, flags, and data into dedicated attributes.
+
+        :raises UCAEmptyRequestError: If the request object is not present.
+        :raises UCARequestMethodNotAllowed: If the HTTP method is unsupported.
+        :raises UCASerializerInvalid: If the request serializer fails validation.
         """
         if not self.request:
             raise UCAEmptyRequestError()
 
+        # Mapping of HTTP methods to their corresponding data sources in the request.
         method_handlers = {
             "GET": self.request.GET,
             "POST": self.request.data,
@@ -145,15 +208,19 @@ class UCAView(APIView):
             "PATCH": self.request.data,
         }
 
+        # Check if the method is supported; raise an error if not.
         if self.request.method not in method_handlers:
             raise UCARequestMethodNotAllowed()
 
+        # Extract the raw request content.
         self.request_content = method_handlers[self.request.method]
 
+        # Validate the request content using the provided request serializer.
         serializer = self.request_serializer_class(data=self.request_content)
         if not serializer.is_valid():
             raise UCASerializerInvalid(serializer.errors)
 
+        # Extract validated data and evaluate expressions if necessary.
         self.request_filter = UCAHelpers.eval_expr(
             serializer.validated_data.get("filter")
         )
@@ -164,25 +231,47 @@ class UCAView(APIView):
 
     def get_queryset(self):
         """
-        Placeholder for subclasses to implement their own queryset logic.
+        Provides a base method for obtaining the queryset for the current request.
+
+        Subclasses are expected to override this method to implement custom logic for
+        retrieving and filtering the queryset from the database.
+
+        :raises NotImplementedError: If the subclass does not implement this method.
         """
         raise NotImplementedError()
 
     def annotate_queryset(self, queryset):
         """
-        Placeholder for subclasses to implement their own queryset annotation logic.
+        Provides a hook for subclasses to perform additional annotations on the queryset.
+
+        This method can be overridden to add extra computed fields or perform complex database
+        annotations prior to further processing.
+
+        :param queryset: The initial queryset retrieved from get_queryset().
+        :return: The modified queryset after annotations (default is unchanged).
         """
         return queryset
 
     def handler(self):
         """
-        Placeholder for subclasses to implement their main request handling logic.
+        Main request handling function that should be implemented by subclasses.
+
+        This method is intended to encapsulate the core business logic of the API endpoint,
+        such as processing the request, performing database operations, and updating the context.
+
+        :raises NotImplementedError: If not overridden in the subclass.
         """
         raise NotImplementedError()
 
     def respond(self, http_code=status.HTTP_200_OK):
         """
-        Prepares and returns a response with the context and HTTP status code.
+        Prepares and returns an HTTP response using the current context and a specified status code.
+
+        The method uses a response serializer (obtained via the class method) to format the response.
+        A TODO is noted regarding serializer validation that might need to be addressed in the future.
+
+        :param http_code: The HTTP status code to return (default is 200 OK).
+        :return: A Response object containing the serialized context data.
         """
         # TODO: Fix serializer validation
         serializer = self.__class__.get_response_serializer_class()(
