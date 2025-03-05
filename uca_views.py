@@ -202,6 +202,8 @@ class UCATokenObtain(UCAView):
     request_serializer_class = UCATokenObtainRequestSerializer
     base_response_serializer_class = UCATokenObtainResponseSerializer
 
+    with_permissions = True
+
     access_token_expiry = (
         settings.UCA_JWT_ACCESS_TOKEN_EXPIRY
         if hasattr(settings, "UCA_JWT_ACCESS_TOKEN_EXPIRY")
@@ -288,6 +290,9 @@ class UCATokenObtain(UCAView):
 
         if self.user_serializer:
             result["user"] = self.user_serializer(instance=user).data
+
+        if self.with_permissions and hasattr(user, "get_all_permissions"):
+            result["permissions"] = user.get_all_permissions()
 
         self.context["result"] = result
 

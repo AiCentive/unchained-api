@@ -42,6 +42,7 @@ class UCATokenRefreshResultSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
     user = serializers.DictField()
+    permissions = serializers.ListField(child=serializers.CharField(), default=[])
 
 
 class UCATokenRefreshResponseSerializer(serializers.Serializer):
