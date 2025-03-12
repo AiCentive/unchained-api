@@ -15,7 +15,7 @@ def uca_exception_handler(exc, context):
         user = request.user
 
     formatted_exc = "\n".join(traceback.format_exception(exc))
-    exception_string = f"{'#'*100}\n{context}\nUser: {user}\n{formatted_exc}\n{'#'*100}"
+    exception_string = f"\n{'#'*100}\n{context}\nUser: {user.__dict__ if hasattr(user, '__dict__') else user}\n{formatted_exc}\n{'#'*100}"
     logging.getLogger("django").error(f"{exception_string}")
 
     if not isinstance(exc, APIException):
