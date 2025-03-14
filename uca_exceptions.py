@@ -1,6 +1,6 @@
 import logging
 import traceback
-
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import APIException
 from rest_framework import status
 from rest_framework.response import Response
@@ -18,7 +18,9 @@ def uca_exception_handler(exc, context):
     exception_string = f"\n{'#'*100}\n{context}\nUser: {user.__dict__ if hasattr(user, '__dict__') else user}\n{formatted_exc}\n{'#'*100}"
     logging.getLogger("django").error(f"{exception_string}")
 
-    if not isinstance(exc, APIException):
+    if isinstance(exc, ObjectDoesNotExist):
+        exc = UCAObjectDoesNotExist(exc)
+    elif not isinstance(exc, APIException):
         exc = APIException(exc)
 
     context = UCAContext.default()
@@ -118,3 +120,9 @@ class UCARequestMethodNotAllowed(APIException):
     status_code = status.HTTP_405_METHOD_NOT_ALLOWED
     default_detail = "Method not allowed."
     default_code = "method_not_allowed"
+
+
+class UCAObjectDoesNotExist(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Object does not exist."
+    default_code = "object_does_not_exist"
