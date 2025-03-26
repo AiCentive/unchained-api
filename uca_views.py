@@ -164,7 +164,7 @@ class UCAView(APIView):
         if should_raise and exc:
             raise exc
 
-        return exc is not None
+        return exc is None
 
     def get_request_data(self, key, exception=None, eval_expr=False):
         """
@@ -967,7 +967,6 @@ class UCADeleteView(UCAView):
 
     def handler(self):
         queryset = self.get_queryset()
-
         excludes = set()
         for obj in queryset:
             has_perm = self.check_object_permission(
