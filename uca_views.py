@@ -597,7 +597,7 @@ class UCAListView(UCAView):
         queryset = self.get_queryset()
 
         paginator = UCAPaginator(
-            self.request_pagination, distinct=self.distinct_objects
+            self.request_pagination,
         )
         result_set = paginator.paginate(
             objects=queryset,

@@ -9,10 +9,8 @@ class UCAPaginator:
     limit: int = 0
     page: int = 0
     total: int = 0
-    distinct: bool = False
 
-    def __init__(self, request_pagination: dict, distinct: bool = False):
-        self.distinct = distinct
+    def __init__(self, request_pagination: dict):
         self.get_pagination_data(request_pagination)
 
     def get_pagination_data(self, request_pagination: dict = {}):
@@ -32,23 +30,19 @@ class UCAPaginator:
             self.offset = int(offset) if offset else 0
 
     def setup(self, objects):
+        result_set = list()
         if isinstance(objects, QuerySet):
-            result_set = set() if self.distinct else list()
             self.total = objects.count()
-        elif isinstance(objects, (list, set)):
-            result_set = type(objects)() if not self.distinct else set()
+        elif isinstance(objects, list):
             self.total = len(objects)
         else:
             raise UCAValueError()
-
-        if self.distinct:
-            result_set = set()
 
         return result_set
 
     def paginate(
         self,
-        objects: list | set | QuerySet,
+        objects: list | QuerySet,
         request,
         check_object_permission: bool = True,
     ):
@@ -72,24 +66,12 @@ class UCAPaginator:
                     self.limit += 1
                     self.total -= 1
                     continue
-                else:
-                    if isinstance(result_set, list):
-                        result_set.append(obj)
-                    elif isinstance(result_set, set):
-                        added = UCAHelpers.add_set(result_set, obj)
-                        if not added:
-                            self.limit += 1
-                            self.total -= 1
-                            continue
-            else:
-                if isinstance(result_set, list):
-                    result_set.append(obj)
-                elif isinstance(result_set, set):
-                    added = UCAHelpers.add_set(result_set, obj)
-                    if not added:
-                        self.limit += 1
-                        self.total -= 1
-                        continue
+
+            if isinstance(result_set, list):
+                result_set.append(obj)
+
+            elif isinstance(result_set, QuerySet):
+                result_set = result_set | obj
 
         return result_set
 
