@@ -55,10 +55,10 @@ class UCAView(APIView):
     transactional = True
 
     # Containers for various data extracted from the request.
-    context = {}  # Response context to be passed to serializers.
-    request_content = {}  # Raw content extracted from the HTTP request.
-    request_data = {}  # Processed request data after validation.
-    request_flags = {}  # Additional flags provided in the request.
+    _context = dict  # Response context to be passed to serializers.
+    _request_content = dict  # Raw content extracted from the HTTP request.
+    _request_data = dict  # Processed request data after validation.
+    _request_flags = dict  # Additional flags provided in the request.
     request_filter = None  # Filtering criteria extracted from the request.
     request_order = None  # Ordering criteria extracted from the request.
     request_order_required = False  # Flag to indicate if ordering is mandatory.
@@ -75,6 +75,13 @@ class UCAView(APIView):
     # Flags to control whether permission checks should be enforced on objects and serializer objects.
     should_check_obj_permission = True
     should_check_serializer_obj_permission = True
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.context = self._context()
+        self.request_content = self._request_content()
+        self.request_data = self._request_data()
+        self.request_flags = self._request_flags()
 
     def add_user_to_context(self):
         """
@@ -287,7 +294,7 @@ class UCATokenObtain(UCAView):
     Handles obtaining access and refresh tokens for a user.
     """
 
-    context = UCAContext.get()
+    _context = UCAContext.get
     request_serializer_class = UCATokenObtainRequestSerializer
     base_response_serializer_class = UCATokenObtainResponseSerializer
 
@@ -410,7 +417,7 @@ class UCATokenRefresh(UCAView):
     Handles refreshing an access token using a valid refresh token.
     """
 
-    context = UCAContext.list()
+    _context = UCAContext.list
     request_serializer_class = UCATokenRefreshRequestSerializer
     base_response_serializer_class = UCATokenRefreshResponseSerializer
 
@@ -543,7 +550,7 @@ class UCATokenRefresh(UCAView):
 
 
 class UCAListView(UCAView):
-    context = UCAContext.list()
+    _context = UCAContext.list
     request_serializer_class = UCAListViewRequestSerializer
     base_response_serializer_class = UCAListViewResponseSerializer
     action_name = "view"
@@ -647,7 +654,7 @@ class UCAListView(UCAView):
 
 
 class UCAGetView(UCAView):
-    context = UCAContext.get()
+    _context = UCAContext.get
     request_serializer_class = UCAGetViewRequestSerializer
     base_response_serializer_class = UCAGetViewResponseSerializer
     action_name = "view"
@@ -729,7 +736,7 @@ class UCAGetView(UCAView):
 
 
 class UCAAddView(UCAView):
-    context = UCAContext.create()
+    _context = UCAContext.create
     request_serializer_class = UCAAddViewRequestSerializer
     base_response_serializer_class = UCAAddViewResponseSerializer
     action_name = "add"
@@ -825,7 +832,7 @@ class UCAAddView(UCAView):
 
 
 class UCAChangeView(UCAView):
-    context = UCAContext.update()
+    _context = UCAContext.update
     request_serializer_class = UCAChangeViewRequestSerializer
     base_response_serializer_class = UCAChangeViewResponseSerializer
     action_name = "change"
@@ -934,7 +941,7 @@ class UCAChangeView(UCAView):
 
 
 class UCADeleteView(UCAView):
-    context = UCAContext.remove()
+    _context = UCAContext.remove
     request_serializer_class = UCADeleteViewRequestSerializer
     base_response_serializer_class = UCADeleteViewResponseSerializer
     action_name = "delete"
