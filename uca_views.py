@@ -122,6 +122,15 @@ class UCAView(APIView):
         """
         return cls.model_return_serializer_class
 
+    @property
+    def serializer_context(self):
+        return {
+            "request": self.request,
+            "view": self,
+            "check_field_permission": self.should_check_serializer_obj_permission,
+            "action": self.action_name,
+        }
+
     def check_object_permission(self, obj, action, should_raise=True):
         """
         Checks whether the current request has the necessary permissions to perform an action on an object.
@@ -618,12 +627,7 @@ class UCAListView(UCAView):
         result_set = [
             self.__class__.get_model_return_serializer_class(self)(
                 instance=result,
-                context={
-                    "request": self.request,
-                    "view": self,
-                    "check_field_permission": self.should_check_serializer_obj_permission,
-                    "action": "view",
-                },
+                context=self.serializer_context,
             ).data
             for result in result_set
         ]
@@ -702,12 +706,7 @@ class UCAGetView(UCAView):
         self.hook_before_serializer(obj)
         serialized_obj = self.__class__.get_model_return_serializer_class(self)(
             obj,
-            context={
-                "request": self.request,
-                "view": self,
-                "check_field_permission": self.should_check_serializer_obj_permission,
-                "action": self.action_name,
-            },
+            context=self.serializer_context,
         ).data
         self.hook_after_serializer(obj, serialized_obj)
 
@@ -773,12 +772,7 @@ class UCAAddView(UCAView):
     def handler(self):
         serializer = self.__class__.get_model_serializer_class(self)(
             data=self.request_data,
-            context={
-                "request": self.request,
-                "view": self,
-                "check_field_permission": self.should_check_serializer_obj_permission,
-                "action": self.action_name,
-            },
+            context=self.serializer_context,
         )
 
         if not serializer.is_valid():
@@ -799,12 +793,7 @@ class UCAAddView(UCAView):
             {
                 "result": self.__class__.get_model_return_serializer_class()(
                     instance=tmp_object,
-                    context={
-                        "request": self.request,
-                        "view": self,
-                        "check_field_permission": self.should_check_serializer_obj_permission,
-                        "action": self.action_name,
-                    },
+                    context=self.serializer_context,
                 ).data
             }
         )
@@ -887,12 +876,7 @@ class UCAChangeView(UCAView):
             instance=obj,
             data=self.request_data,
             partial=True,
-            context={
-                "request": self.request,
-                "view": self,
-                "check_field_permission": self.should_check_serializer_obj_permission,
-                "action": self.action_name,
-            },
+            context=self.serializer_context,
         )
 
         if not serializer.is_valid():
@@ -908,12 +892,7 @@ class UCAChangeView(UCAView):
             {
                 "result": self.__class__.get_model_return_serializer_class()(
                     instance=updated_object,
-                    context={
-                        "request": self.request,
-                        "view": self,
-                        "check_field_permission": self.should_check_serializer_obj_permission,
-                        "action": self.action_name,
-                    },
+                    context=self.serializer_context,
                 ).data
             }
         )
