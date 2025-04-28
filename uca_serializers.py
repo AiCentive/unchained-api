@@ -209,15 +209,14 @@ class UCAModelSerializer(serializers.ModelSerializer):
         super().run_validators(value)
 
     def create(self, validated_data, _save=True, **kwargs):
-        request = self.context.get("request")
-        request_user = request.user if request.user.is_authenticated else None
+        user = self.context.get("user")
 
         # Check if the model has a created_by field
         if hasattr(self.Meta.model, "created_by"):
             # Check if the created_by field is not already set
             if not "created_by" in validated_data:
                 # Set the created_by field to the current user
-                validated_data.update({"created_by": request_user})
+                validated_data.update({"created_by": user})
 
         obj = self.Meta.model(**validated_data)
 
@@ -227,15 +226,14 @@ class UCAModelSerializer(serializers.ModelSerializer):
         return obj
 
     def update(self, instance, validated_data):
-        request = self.context.get("request")
-        request_user = request.user if request.user.is_authenticated else None
+        user = self.context.get("user")
 
         # Check if the model has an updated_by field
         if hasattr(self.Meta.model, "updated_by"):
             # Check if the updated_by field is not already set
             if not "updated_by" in validated_data:
                 # Set the updated_by field to the current user
-                validated_data.update({"updated_by": request_user})
+                validated_data.update({"updated_by": user})
 
         return super().update(instance, validated_data)
 
