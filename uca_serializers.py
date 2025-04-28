@@ -226,5 +226,18 @@ class UCAModelSerializer(serializers.ModelSerializer):
 
         return obj
 
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        request_user = request.user if request.user.is_authenticated else None
+
+        # Check if the model has an updated_by field
+        if hasattr(self.Meta.model, "updated_by"):
+            # Check if the updated_by field is not already set
+            if not "updated_by" in validated_data:
+                # Set the updated_by field to the current user
+                validated_data.update({"updated_by": request_user})
+
+        return super().update(instance, validated_data)
+
     class Meta:
         fields = ["__model__"]
