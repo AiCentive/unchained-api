@@ -780,7 +780,7 @@ class UCAAddView(UCAView):
             # self.handle_invalid_serializer(serializer)
             raise UCASerializerInvalid(serializer.errors)
 
-        tmp_object = self.model_class(**serializer.validated_data)
+        tmp_object = serializer.create(serializer.validated_data, _save=False)
         self.hook_before_creation(tmp_object)
 
         self.check_object_permission(tmp_object, self.action_name)
