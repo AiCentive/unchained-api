@@ -22,6 +22,8 @@ from .uca_helpers import UCAHelpers
 from .uca_jwt import decode_jwt, create_jwt
 from .uca_paginator import UCAPaginator
 from .uca_serializers import (
+    UCAChangeManyViewRequestSerializer,
+    UCAChangeManyViewResponseSerializer,
     UCAListViewRequestSerializer,
     UCAListViewResponseSerializer,
     UCAAddViewRequestSerializer,
@@ -927,10 +929,8 @@ class UCAChangeView(UCAView):
 
 class UCAChangeManyView(UCAView):
     _context = UCAContext.update
-    request_serializer_class = (
-        UCAChangeViewRequestSerializer  # same structure, just receives a list
-    )
-    base_response_serializer_class = UCAChangeViewResponseSerializer
+    request_serializer_class = UCAChangeManyViewRequestSerializer
+    base_response_serializer_class = UCAChangeManyViewResponseSerializer
     action_name = "change"
 
     model_class = None
