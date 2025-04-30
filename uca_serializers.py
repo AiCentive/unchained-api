@@ -113,11 +113,12 @@ class UCAChangeViewResponseSerializer(serializers.Serializer):
     result = serializers.DictField(default={})
 
 
+class UCAChangeManyDataSerializer(serializers.Serializer):
+    items = serializers.ListField(child=serializers.DictField(), allow_empty=False)
+
+
 class UCAChangeManyViewRequestSerializer(serializers.Serializer):
-    data = serializers.DictField(
-        child=serializers.ListField(child=serializers.DictField(), allow_empty=False),
-        required=True,
-    )
+    data = UCAChangeManyDataSerializer()
     flags = serializers.DictField(required=False, default={})
 
 
