@@ -113,6 +113,25 @@ class UCAChangeViewResponseSerializer(serializers.Serializer):
     result = serializers.DictField(default={})
 
 
+class UCAChangeManyDataSerializer(serializers.Serializer):
+    items = serializers.ListField(child=serializers.DictField(), allow_empty=False)
+
+
+class UCAChangeManyViewRequestSerializer(serializers.Serializer):
+    data = UCAChangeManyDataSerializer()
+    flags = serializers.DictField(required=False, default={})
+
+
+class UCAChangeManyViewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    status = serializers.IntegerField()
+    results = serializers.ListField(
+        child=serializers.DictField(),  # replaced by  model_return_serializer
+        required=False,
+    )
+    user = serializers.DictField(required=False)
+
+
 class UCADeleteViewRequestSerializer(serializers.Serializer):
     filter = serializers.CharField(allow_blank=True, default="", required=False)
     flags = serializers.DictField(required=False, default={})

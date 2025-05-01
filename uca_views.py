@@ -9,6 +9,7 @@ from .uca_context import UCAContext
 from .uca_exceptions import (
     UCAAuthInvalid,
     UCAAuthRefreshTokenInvalid,
+    UCAException,
     UCAFilterWrongFormat,
     UCAObjectPermissionDenied,
     UCAObjectPermissionCheckError,
@@ -21,6 +22,8 @@ from .uca_helpers import UCAHelpers
 from .uca_jwt import decode_jwt, create_jwt
 from .uca_paginator import UCAPaginator
 from .uca_serializers import (
+    UCAChangeManyViewRequestSerializer,
+    UCAChangeManyViewResponseSerializer,
     UCAListViewRequestSerializer,
     UCAListViewResponseSerializer,
     UCAAddViewRequestSerializer,
@@ -108,6 +111,10 @@ class UCAView(APIView):
         :return: The serializer class for the response.
         """
         return cls.base_response_serializer_class
+
+    @classmethod
+    def get_model_serializer_class(cls, view=None):
+        return cls.model_serializer_class
 
     @classmethod
     def get_model_return_serializer_class(cls, view=None):
@@ -911,6 +918,89 @@ class UCAChangeView(UCAView):
         """
         Handles PATCH requests, optionally wrapping the process in a transaction.
         """
+        self.get_request_content()
+
+        if self.transactional:
+            with transaction.atomic():
+                return self.process()
+
+        return self.process()
+
+
+class UCAChangeManyView(UCAView):
+    _context = UCAContext.update
+    request_serializer_class = UCAChangeManyViewRequestSerializer
+    base_response_serializer_class = UCAChangeManyViewResponseSerializer
+    action_name = "change"
+
+    model_class = None
+    model_serializer_class = None
+    model_return_serializer_class = None
+
+    def get_items_data(self):
+        """
+        Retrieves and validates list of update instructions from the request data.
+        """
+        data = self.request_data.get("items")
+        if not data or not isinstance(data, list):
+            raise UCAException("`items` must be a non-empty list.")
+
+        return data
+
+    def get_queryset(self, id):
+        try:
+            return self.model_class.objects.get(id=id)
+        except self.model_class.DoesNotExist:
+            raise UCADataIdNotProvided(f"Object with id {id} not found.")
+
+    def hook_before_update(self, obj):
+        pass
+
+    def hook_after_update(self, obj):
+        pass
+
+    def handler(self):
+        items_data = self.get_items_data()
+        updated_results = []
+
+        for item_data in items_data:
+            obj_id = item_data.get("id")
+            if not obj_id:
+                raise UCADataIdNotProvided()
+
+            obj = self.get_queryset(obj_id)
+            self.check_object_permission(obj, self.action_name)
+            self.hook_before_update(obj)
+
+            serializer = self.__class__.get_model_serializer_class(self)(
+                instance=obj,
+                data=item_data,
+                partial=True,
+                context=self.serializer_context,
+            )
+
+            if not serializer.is_valid():
+                raise UCASerializerInvalid(serializer.errors)
+
+            updated_obj = serializer.save()
+            self.hook_after_update(updated_obj)
+
+            serialized_data = self.__class__.get_model_return_serializer_class()(
+                instance=updated_obj,
+                context=self.serializer_context,
+            ).data
+
+            updated_results.append(serialized_data)
+
+        self.context.update({"results": updated_results})
+
+    def process(self):
+        self.handler()
+        self.add_user_to_context()
+        self.context.update({"success": True, "status": status.HTTP_200_OK})
+        return self.respond(status.HTTP_200_OK)
+
+    def patch(self, *args, **kwargs):
         self.get_request_content()
 
         if self.transactional:

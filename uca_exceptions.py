@@ -38,6 +38,12 @@ def uca_exception_handler(exc, context):
     return Response(data=context, status=exc.status_code)
 
 
+class UCAException(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Data not found or malformatted"
+    default_code = "data_wrong_format"
+
+
 class UCAAuthInvalid(APIException):
     status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = "Authentication credentials were not valid."
