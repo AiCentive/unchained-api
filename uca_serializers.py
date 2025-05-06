@@ -150,9 +150,10 @@ class UCADeleteViewResponseSerializer(serializers.Serializer):
 
 @extend_schema_field(
     {
-        "type": "string",
+        "type": ["string", "null"],
         "description": (
             "Base64-encoded file with data URI header.\n"
+            "Send `null` or empty string to remove/clear the file.\n\n"
             "Example:\n"
             "`data:image/png;name=logo.png;base64,iVBORw0KGgoAAAANS...`"
         ),
@@ -163,7 +164,8 @@ class Base64FileUploadField(serializers.FileField):
     """
     DRF field that accepts data URI with filename:
     data:<mime>;name=<filename>;base64,<base64-content>
-    Returns InMemoryUploadedFile.
+
+    Returns InMemoryUploadedFile or None (if empty or null input).
     """
 
     DATA_URI_PATTERN = re.compile(
@@ -171,9 +173,13 @@ class Base64FileUploadField(serializers.FileField):
     )
 
     def to_internal_value(self, data):
+        # Handle None or empty string
+        if data in [None, ""]:
+            return None
+
         if not isinstance(data, str):
             raise serializers.ValidationError(
-                "Expected a base64 string with data URI header."
+                "Expected a base64 string with data URI header or null/empty string."
             )
 
         match = self.DATA_URI_PATTERN.match(data)
