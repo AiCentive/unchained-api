@@ -1,3 +1,9 @@
+import base64
+import io
+import re
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from drf_spectacular.utils import extend_schema_field
+
 from rest_framework import serializers
 
 from api.uca_exceptions import UCAPermissionError
@@ -140,6 +146,67 @@ class UCADeleteViewRequestSerializer(serializers.Serializer):
 class UCADeleteViewResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField()
     messages = serializers.ListField(child=serializers.CharField(), default=[])
+
+
+@extend_schema_field(
+    {
+        "type": "string",
+        "description": (
+            "Base64-encoded file with data URI header.\n"
+            "Example:\n"
+            "`data:image/png;name=logo.png;base64,iVBORw0KGgoAAAANS...`"
+        ),
+        "example": "data:image/png;name=logo.png;base64,iVBORw0KGgoAAAANS...",
+    }
+)
+class Base64FileUploadField(serializers.FileField):
+    """
+    DRF field that accepts data URI with filename:
+    data:<mime>;name=<filename>;base64,<base64-content>
+    Returns InMemoryUploadedFile.
+    """
+
+    DATA_URI_PATTERN = re.compile(
+        r"^data:(?P<mime>[\w\-\+\.\/]+);name=(?P<filename>[^;]+);base64,(?P<data>.+)$"
+    )
+
+    def to_internal_value(self, data):
+        if not isinstance(data, str):
+            raise serializers.ValidationError(
+                "Expected a base64 string with data URI header."
+            )
+
+        match = self.DATA_URI_PATTERN.match(data)
+
+        if not match:
+            raise serializers.ValidationError(
+                "Invalid data URI format. Expected 'data:<mime>;name=<filename>;base64,<data>'"
+            )
+
+        mime_type = match.group("mime")
+        filename = match.group("filename")
+        base64_data = match.group("data")
+
+        # Decode base64
+        try:
+            decoded_file = base64.b64decode(base64_data)
+        except (TypeError, ValueError):
+            raise serializers.ValidationError("Invalid base64 data.")
+
+        # Prepare in-memory file
+        file_io = io.BytesIO(decoded_file)
+        file_size = file_io.getbuffer().nbytes
+
+        uploaded_file = InMemoryUploadedFile(
+            file=file_io,
+            field_name=None,
+            name=filename,
+            content_type=mime_type,
+            size=file_size,
+            charset=None,
+        )
+
+        return super().to_internal_value(uploaded_file)
 
 
 class UCAModelSerializer(serializers.ModelSerializer):
