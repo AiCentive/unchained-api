@@ -133,7 +133,11 @@ class UCAView(APIView):
     def serializer_context(self):
         return {
             "request": self.request,
-            "user": self.request.user if self.request.user.is_authenticated else None,
+            "user": (
+                self.request.user
+                if self.request.user and self.request.user.is_authenticated
+                else None
+            ),
             "view": self,
             "check_field_permission": self.should_check_serializer_obj_permission,
             "action": self.action_name,
