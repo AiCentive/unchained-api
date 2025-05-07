@@ -57,9 +57,6 @@ class UCAAuthentication(BaseAuthentication):
         try:
             payload = self.get_payload_from_token(token)
             user = self.get_user_from_payload(request, payload)
-            if not user:
-                raise UCAAuthInvalid("User not found")
-
             return user, token
 
         except jwt.ExpiredSignatureError:
