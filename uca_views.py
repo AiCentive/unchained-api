@@ -682,7 +682,13 @@ class UCAGetView(UCAView):
         combined_serializer = type(
             f"{cls.__name__}ResponseSerializer",
             (cls.base_response_serializer_class,),
-            {"result": cls.get_model_return_serializer_class()()},
+            {
+                "result": (
+                    cls.get_model_return_serializer_class()()
+                    if cls.get_model_return_serializer_class()
+                    else None
+                )
+            },
         )
 
         return combined_serializer
@@ -760,7 +766,13 @@ class UCAAddView(UCAView):
         combined_serializer = type(
             f"{cls.__name__}ResponseSerializer",
             (cls.base_response_serializer_class,),
-            {"result": cls.get_model_return_serializer_class()()},
+            {
+                "result": (
+                    cls.get_model_return_serializer_class()()
+                    if cls.get_model_return_serializer_class()
+                    else None
+                )
+            },
         )
 
         return combined_serializer
@@ -850,7 +862,13 @@ class UCAChangeView(UCAView):
         combined_serializer = type(
             f"{cls.__name__}ResponseSerializer",
             (cls.base_response_serializer_class,),
-            {"result": cls.get_model_return_serializer_class()()},
+            {
+                "result": (
+                    cls.get_model_return_serializer_class()()
+                    if cls.get_model_return_serializer_class()
+                    else None
+                )
+            },
         )
 
         return combined_serializer
