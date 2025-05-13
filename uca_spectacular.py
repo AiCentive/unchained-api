@@ -56,7 +56,13 @@ def uca_extend_schema(cls):
         response_combined = type(
             f"{cls_name}ResponseSerializer",
             (cls.base_response_serializer_class,),
-            {"result": cls.get_model_return_serializer_class()()},
+            {
+                "result": (
+                    cls.get_model_return_serializer_class()()
+                    if cls.get_model_return_serializer_class()
+                    else None
+                )
+            },
         )
 
         return {
