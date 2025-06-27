@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q
 from rest_framework import status
@@ -93,7 +94,10 @@ class UCAView(APIView):
         This method checks if the user exists and is authenticated. If a user_serializer
         is defined, it serializes the user instance and adds it to the context dictionary.
         """
-        user = self.request.user
+        if not self.request.user or not self.request.user.is_authenticated:
+            return
+
+        user = get_user_model().objects.get(id=self.request.user.id)
 
         # Only add the user to the context if authenticated and a serializer is provided.
         if user and user.is_authenticated and self.user_serializer:
