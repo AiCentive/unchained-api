@@ -57,13 +57,14 @@ class UCAPaginator:
         if self.limit == -1:
             self.limit = self.total
 
+        count = self.limit
         for i, obj in enumerate(objects[self.offset :]):
-            if i >= self.limit:
+            if i >= count:
                 break
 
             if check_object_permission:
                 if not obj.check_view_perm(request):
-                    self.limit += 1
+                    count += 1
                     self.total -= 1
                     continue
 
