@@ -598,7 +598,8 @@ class UCAListView(UCAView):
         """
         Constructs and returns the queryset with optional filtering, annotation, and ordering.
         """
-        queryset = self.model_class.objects
+        queryset = self.annotate_queryset(self.model_class.objects)
+
         if self.request_filter:
             if not isinstance(self.request_filter, Q):
                 raise UCAFilterWrongFormat()
@@ -607,7 +608,6 @@ class UCAListView(UCAView):
         if self.distinct_objects:
             queryset = queryset.distinct()
 
-        queryset = self.annotate_queryset(queryset)
         return queryset.order_by(*self.request_order or [])
 
     def hook_before_serializer(self, result_set):
