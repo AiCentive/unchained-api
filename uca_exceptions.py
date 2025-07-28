@@ -1,5 +1,7 @@
 import logging
 import traceback
+from collections import defaultdict
+
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import APIException
 from rest_framework import status
@@ -24,18 +26,23 @@ def uca_exception_handler(exc, context):
         exc = APIException(exc)
 
     context = UCAContext.default()
-    
+
     # Create basic error structure
     error_data = {
         "type": exc.status_code,
         "message": exc.default_detail,
         "code": exc.default_code,
     }
-    
+
     # Add field_errors for UCASerializerInvalid exceptions
-    if isinstance(exc, UCASerializerInvalid) and hasattr(exc, 'field_errors') and exc.field_errors:
-        error_data["field_errors"] = exc.field_errors
-    
+    if isinstance(exc, UCASerializerInvalid) and getattr(exc, "field_errors", None):
+        field_errors = defaultdict(list)
+        for field, errors in exc.field_errors.items():
+            field_errors[field].extend(
+                error.code if hasattr(error, "code") else str(error) for error in errors
+            )
+        error_data["field_errors"] = dict(field_errors)
+
     context.update(
         {
             "status": exc.status_code,
@@ -104,23 +111,23 @@ class UCASerializerInvalid(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Serializer validation failed"
     default_code = "serializer_invalid"
-    
+
     def __init__(self, field_errors=None, detail=None, code=None):
         """
         Initialize UCASerializerInvalid exception with field-level validation errors.
-        
+
         Args:
             field_errors: Django REST framework serializer errors dictionary
             detail: Optional custom detail message
             code: Optional custom error code
         """
         self.field_errors = field_errors or {}
-        
+
         if detail is not None:
             self.detail = detail
         else:
             self.detail = self.default_detail
-            
+
         if code is not None:
             self.default_code = code
 
