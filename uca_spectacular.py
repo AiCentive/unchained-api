@@ -74,7 +74,7 @@ def uca_extend_schema(cls):
         request_combined = type(
             f"{cls_name}RequestSerializer",
             (cls.request_serializer_class,),
-            {"data": cls.get_model_serializer_class()()},
+            {"data": cls.get_model_serializer_class()(partial=True)},
         )
 
         response_combined = type(
