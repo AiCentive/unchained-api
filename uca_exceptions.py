@@ -3,6 +3,7 @@ import traceback
 from collections import defaultdict
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import ProtectedError
 from rest_framework.exceptions import APIException
 from rest_framework import status
 from rest_framework.response import Response
@@ -22,6 +23,8 @@ def uca_exception_handler(exc, context):
 
     if isinstance(exc, ObjectDoesNotExist):
         exc = UCAObjectDoesNotExist(exc)
+    elif isinstance(exc, ProtectedError):
+        exc = UCAProtectedError(exc)
     elif not isinstance(exc, APIException):
         exc = APIException(exc)
 
@@ -30,8 +33,8 @@ def uca_exception_handler(exc, context):
     # Create basic error structure
     error_data = {
         "type": exc.status_code,
-        "message": exc.default_detail,
-        "code": exc.default_code,
+        "message": getattr(exc, "detail", getattr(exc, "default_detail", "error")),
+        "code": getattr(exc, "code", getattr(exc, "default_code", "error")),
     }
 
     # Add field_errors for UCASerializerInvalid exceptions
@@ -166,3 +169,24 @@ class UCAObjectDoesNotExist(APIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = "Object does not exist."
     default_code = "object_does_not_exist"
+
+
+class UCAProtectedError(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "error_protected"
+    default_detail = "Delete blocked by protected foreign key."
+
+    def __init__(self, exc: ProtectedError):
+        # exc.args[0] is the human string, exc.args[1] is a set of protected objects
+        related_objects = list(exc.protected_objects)
+        # Try to infer relation: "<Model>.<field>"
+        # Django includes that in the str(exc)
+        relation_detail = None
+        if isinstance(exc.args[0], str):
+            # crude parse, but enough: e.g.
+            # "Cannot delete some instances of model 'School' because they are referenced through protected foreign keys: 'Student.school'."
+            msg = exc.args[0]
+            if ":" in msg:
+                relation_detail = msg.split(":")[-1].strip().strip(".").strip("'")
+
+        self.detail = relation_detail or "unknown"
