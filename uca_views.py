@@ -306,7 +306,7 @@ class UCAView(APIView):
         :return: A Response object containing the serialized context data.
         """
         # TODO: Fix serializer validation
-        serializer = self.__class__.get_response_serializer_class()(
+        serializer = self.__class__.get_response_serializer_class(view=self)(
             data=self.context,
             read_only=True,
         )
@@ -688,8 +688,8 @@ class UCAGetView(UCAView):
             (cls.base_response_serializer_class,),
             {
                 "result": (
-                    cls.get_model_return_serializer_class()()
-                    if cls.get_model_return_serializer_class()
+                    cls.get_model_return_serializer_class(view=view)()
+                    if cls.get_model_return_serializer_class(view=view)
                     else None
                 )
             },
@@ -772,8 +772,8 @@ class UCAAddView(UCAView):
             (cls.base_response_serializer_class,),
             {
                 "result": (
-                    cls.get_model_return_serializer_class()()
-                    if cls.get_model_return_serializer_class()
+                    cls.get_model_return_serializer_class(view=view)()
+                    if cls.get_model_return_serializer_class(view=view)
                     else None
                 )
             },
@@ -868,8 +868,8 @@ class UCAChangeView(UCAView):
             (cls.base_response_serializer_class,),
             {
                 "result": (
-                    cls.get_model_return_serializer_class()()
-                    if cls.get_model_return_serializer_class()
+                    cls.get_model_return_serializer_class(view=view)()
+                    if cls.get_model_return_serializer_class(view=view)
                     else None
                 )
             },
