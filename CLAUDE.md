@@ -6,15 +6,14 @@ UCA is a **utility library** for building REST APIs with Django REST Framework. 
 
 ## Is It Used?
 
-**Not currently.** The chatbot is a CLI tool. UCA would be needed if/when an HTTP API layer is built for the chatbot (e.g., so the Angular widget can talk to it via REST).
+**No.** The chatbot's REST API will be built with FastAPI instead (decision: UCA is overkill for a single `/ask` endpoint). UCA is not needed for the thesis.
 
 ## What the Student Needs to Know
 
 - UCA exists as a utility library owned by AiCentive GmbH
-- It is **not needed** for the thesis pipeline or chatbot as they stand today
-- If a web API for the chatbot is needed later, UCA would be the framework to use
+- It is **not needed** for the thesis — we're using FastAPI for the REST backend instead
 - The license is proprietary — cannot redistribute
-- Probably does **not need modification** for the thesis
+- Does **not need modification** for the thesis
 
 ## File Map
 
